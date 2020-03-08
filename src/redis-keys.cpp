@@ -1,9 +1,5 @@
-
-#ifndef redis_keys
-
 #include "Arduino.h"
 #include "redis-keys.h"
-#endif
 
 void Redis::set_callbacks(func print, func println){
     call_back.print = print;
@@ -110,16 +106,43 @@ void Redis::convert(byte i, char* pReply){
       *data_defs[i].pvar.pulong = atol(pReply);
       break;
     case is_char:
-      *data_defs[i].pvar.pulong = *pReply;
+      *data_defs[i].pvar.pchar = *pReply;
   };              
-  
+}
+
+void Redis::to_string(byte i){
+  switch(data_defs[i].type){
+    case is_byte:
+      send = String(*data_defs[i].pvar.pbyte);
+      break;
+    case is_int:
+      send = String(*data_defs[i].pvar.pint);
+      break;
+    case is_uint:
+      send = String(*data_defs[i].pvar.puint);
+      break;
+    case is_float:
+      send = String(*data_defs[i].pvar.pfloat); 
+      break;
+    case is_double:
+      send = String(*data_defs[i].pvar.pdouble);
+      break;
+    case is_long:
+      send = String(*data_defs[i].pvar.plong);
+      break;
+    case is_ulong:
+      send = String(*data_defs[i].pvar.pulong);
+      break;
+    case is_char:
+      send = String(*data_defs[i].pvar.pchar);
+      break;
+  };              
 }
 
 void Redis::sync(char c){
   byte i;
 
   if (c == 0x0D){
-      rec_time = micros();
       if ((reply[0] == '$' || reply[0] == '+') && reply[1] == '@' ){
         var_follows = reply[2];
         convert(i, pReply+3); 
@@ -143,19 +166,19 @@ void Redis::sync(char c){
 }
 
 
-void Redis::set(byte ref){        
-    call_back.print("set");
-    call_back.print(" ");
+void Redis::set(byte ref){       
+    call_back.print("set ");
     call_back.print(data_defs[ref].name);
     call_back.print(" ");
-    //call_back.println(*data_defs[ref].pvar.pfloat);
+    to_string(ref);
+    call_back.println(send);
 }
 
 void Redis::get(byte ref){ 
     call_back.print("Echo @");
-    //call_back.println((char)ref);       
-    call_back.print("get");
-    call_back.print(" ");
+    send = String(ref);
+    call_back.println(send);       
+    call_back.print("get ");
     call_back.print(data_defs[ref].name);
 }
 

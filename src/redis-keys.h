@@ -5,10 +5,13 @@
   Released into the public domain.
 */
 #ifndef redis_keys
-
+#define redis_keys
 #include "Arduino.h"
 
-union pval {
+class Redis{
+  private:
+    char *pReply = reply;
+    union pval {
           byte* pbyte;
           int* pint;
           unsigned int* puint;
@@ -19,28 +22,20 @@ union pval {
           char* pchar;  
       } pvals;
 
-enum val_type { is_byte=0, is_int, is_uint, is_float, is_double, is_long, is_ulong, is_char } types;
+    enum val_type { is_byte=0, is_int, is_uint, is_float, is_double, is_long, is_ulong, is_char } types;
 
-struct shared_data
-    { 
-      String name;
-      val_type type;
-      pval  pvar;
-    };
+    struct shared_data
+      { 
+        String name;
+        val_type type;
+        pval  pvar;
+      };
 
-
- shared_data data_defs[15];
-
-class Redis{
-  private:
-    char *pReply = reply;
+      shared_data data_defs[15];
        
   public:
-    char reply[40];
-    byte has_connected;
-    int reply_count;
-    int reply_status;
-    unsigned long rec_time = 0;
+    char reply[35];
+    String send;
     void redis_callback(char* reply);
     byte index = 0;
     int var_follows = -1;
@@ -51,7 +46,7 @@ class Redis{
     struct redis_callbacks
     { 
       void (*print)(String print);
-      void (*println)(String print);
+      void (*println)(String println);
       bool enable; 
       void (*reply)(char* reply);
     };
@@ -75,6 +70,7 @@ class Redis{
     byte data(String name, char* var);
 
     void convert(byte i, char* pReply);
+    void to_string(byte i);
     void sync(char c);
     void set(byte ref);
     void get(byte ref);

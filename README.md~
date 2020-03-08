@@ -10,8 +10,9 @@ Simple low resource library to send and key data from Redis. UNO compatible
 * Non-blocking get and set
 * Data send and saved without further intervention
 * Option to call back on data received data
-* Supports up to 244 variables (note memory limits this much less on UNO)
-* 1 Byte reference to data mapping conserves memory when repeating calls to redis
+* Supports up to 2 of variables (note memory limits this on UNO)
+
+
 
 == License ==
 
