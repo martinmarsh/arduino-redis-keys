@@ -1,15 +1,13 @@
 #include "Arduino.h"
 #include "redis-keys.h"
 
-void Redis::set_callbacks(func print, func println){
+void Redis::set_callbacks(func print){
     call_back.print = print;
-    call_back.println = println;
     call_back.enable = false;
 }
 
-void Redis::set_callbacks(func print, func println, func1 call_func){
+void Redis::set_callbacks(func print, func1 call_func){
     call_back.print = print;
-    call_back.println = println;
     call_back.reply = call_func;
     call_back.enable = true;
 }
@@ -46,6 +44,7 @@ byte Redis::data(String name, int* var){
     
 }
 
+#ifndef limited_key_types
 byte Redis::data(String name, unsigned int* var){
     data_defs[index].type = is_uint;
     data_defs[index].pvar.puint = var;
@@ -80,21 +79,23 @@ byte Redis::data(String name, char* var){
     return data_name(name);
     
 }
-
+#endif
 
 void Redis::convert(byte i, char* pReply){
   switch(data_defs[i].type){
     case is_byte:
       *data_defs[i].pvar.pbyte = atoi(pReply);
       break;
-    case is_int:
+    case 2:
       *data_defs[i].pvar.pint = atoi(pReply);
-      break;
-    case is_uint:
-      *data_defs[i].pvar.puint = atoi(pReply);
       break;
     case is_float:                           
       *data_defs[i].pvar.pfloat = atof(pReply);
+      break;
+
+#ifndef limited_key_types
+    case is_uint:
+      *data_defs[i].pvar.puint = atoi(pReply);
       break;
     case is_double:
       *data_defs[i].pvar.pdouble = atof(pReply);
@@ -107,6 +108,7 @@ void Redis::convert(byte i, char* pReply){
       break;
     case is_char:
       *data_defs[i].pvar.pchar = *pReply;
+#endif
   };              
 }
 
@@ -118,11 +120,13 @@ void Redis::to_string(byte i){
     case is_int:
       send = String(*data_defs[i].pvar.pint);
       break;
-    case is_uint:
-      send = String(*data_defs[i].pvar.puint);
-      break;
     case is_float:
       send = String(*data_defs[i].pvar.pfloat); 
+      break;
+
+#ifndef limited_key_types
+    case is_uint:
+      send = String(*data_defs[i].pvar.puint);
       break;
     case is_double:
       send = String(*data_defs[i].pvar.pdouble);
@@ -136,6 +140,7 @@ void Redis::to_string(byte i){
     case is_char:
       send = String(*data_defs[i].pvar.pchar);
       break;
+#endif      
   };              
 }
 
@@ -167,19 +172,22 @@ void Redis::sync(char c){
 
 
 void Redis::set(byte ref){       
-    call_back.print("set ");
-    call_back.print(data_defs[ref].name);
-    call_back.print(" ");
-    to_string(ref);
-    call_back.println(send);
+  call_back.print("set ");
+  call_back.print(data_defs[ref].name);
+  call_back.print(" ");
+  to_string(ref);
+  call_back.print(send);
+  call_back.print(ret);
 }
 
 void Redis::get(byte ref){ 
     call_back.print("Echo @");
     send = String(ref);
-    call_back.println(send);       
+    call_back.print(send); 
+    call_back.print(ret);      
     call_back.print("get ");
     call_back.print(data_defs[ref].name);
+    call_back.print(ret);
 }
 
 
