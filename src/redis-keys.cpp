@@ -86,7 +86,7 @@ void Redis::convert(byte i, char* pReply){
     case is_byte:
       *data_defs[i].pvar.pbyte = atoi(pReply);
       break;
-    case 2:
+    case is_int:
       *data_defs[i].pvar.pint = atoi(pReply);
       break;
     case is_float:                           
@@ -148,20 +148,25 @@ void Redis::sync(char c){
   byte i;
 
   if (c == 0x0D){
-      if ((reply[0] == '$' || reply[0] == '+') && reply[1] == '@' ){
-        var_follows = reply[2];
-        convert(i, pReply+3); 
+      *pReply = '\0'; 
+      if (reply[0] == '@' && reply[1] == '@' ){
+        pReply = reply + 2;
+        var_follows = atoi(pReply);
         pReply = reply; 
       }else{
-        *pReply = '\0'; 
-          pReply = reply; 
-        if(var_follows >= 0){
-          convert(var_follows, pReply);
-        }
-        if(call_back.enable == true){
-            call_back.reply(pReply);
-        }      
-        var_follows = -1;
+        pReply = reply; 
+        if(var_follows < 255){
+          if(reply[0] != '$'){
+            convert(var_follows, pReply);
+            var_follows = 255;
+            if(call_back.enable == true){
+                call_back.reply(pReply);
+            }   
+          }else if(reply[1] == '-'){
+             // value not set in redis ie reply = -1
+             var_follows = 255;
+          }
+        }   
       }
     
     }else if(c != 0x0A){
@@ -181,7 +186,7 @@ void Redis::set(byte ref){
 }
 
 void Redis::get(byte ref){ 
-    call_back.print("Echo @");
+    call_back.print("Echo @@");
     send = String(ref);
     call_back.print(send); 
     call_back.print(ret);      

@@ -50,13 +50,13 @@ class Redis{
     struct shared_data
       { 
         String name;
-        char type;
+        byte type;
         pval  pvar;
       };
 
     shared_data data_defs[max_key_definitions];
     String send;
-    String ret = "/r/n";
+    String ret = String("\r\n");
 
     void convert(byte i, char* pReply);
     void to_string(byte i);
@@ -66,7 +66,7 @@ class Redis{
 
     void redis_callback(char* reply);
     byte index = 0;
-    int var_follows = -1;
+    byte var_follows = 255;
     typedef void func(String print);
     typedef void func1(char* reply);
     
