@@ -1,0 +1,6 @@
+Redis       KEYWORD1
+redis       KEYWORD1
+redis_host  KEYWORD1
+enable_reply_callback     KEYWORD2
+disable_reply_callback    KEYWORD2
+set_callbacks             KEYWORD2
