@@ -1,7 +1,6 @@
 # arduino-redis-keys
 Light weight non blocking Arduino library for exchanging keys with Redis. Tested with UNO R3.
 
-Currently Under Development
 
 Simple low resource library to send and key data from Redis. UNO compatible
 
@@ -12,6 +11,12 @@ Simple low resource library to send and key data from Redis. UNO compatible
 * Option to call back on data received data
 * Supports up to 244 variables (note memory limits this much less on UNO)
 * 1 Byte reference to data mapping conserves memory when repeating calls to redis
+
+ISSUES
+
+Char strings must be dimensioned to 10 bytes
+Float and Double have default precisions
+
 
 == License ==
 
