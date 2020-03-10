@@ -107,7 +107,7 @@ void Redis::convert(byte i, char* pReply){
       *data_defs[i].pvar.pulong = atol(pReply);
       break;
     case is_char:
-      *data_defs[i].pvar.pchar = *pReply;
+       strncpy(data_defs[i].pvar.pchar, pReply, 10);
 #endif
   };              
 }
@@ -121,7 +121,8 @@ void Redis::to_string(byte i){
       send = String(*data_defs[i].pvar.pint);
       break;
     case is_float:
-      send = String(*data_defs[i].pvar.pfloat); 
+      send = String(*data_defs[i].pvar.pfloat, 7); 
+      //snprintf(send_buffer, sizeof(send_buffer), "%f", data_defs[i].pvar.pfloat);
       break;
 
 #ifndef limited_key_types
@@ -129,7 +130,7 @@ void Redis::to_string(byte i){
       send = String(*data_defs[i].pvar.puint);
       break;
     case is_double:
-      send = String(*data_defs[i].pvar.pdouble);
+      send = String(*data_defs[i].pvar.pdouble, 15);
       break;
     case is_long:
       send = String(*data_defs[i].pvar.plong);
@@ -138,7 +139,7 @@ void Redis::to_string(byte i){
       send = String(*data_defs[i].pvar.pulong);
       break;
     case is_char:
-      send = String(*data_defs[i].pvar.pchar);
+      send = String(data_defs[i].pvar.pchar);
       break;
 #endif      
   };              
@@ -169,7 +170,7 @@ void Redis::sync(char c){
         }   
       }
     
-    }else if(c != 0x0A){
+    }else if(c != 0x0A && pReply < pmax_reply){
     *pReply++ = c;
   }   
 

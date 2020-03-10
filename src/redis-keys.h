@@ -15,8 +15,8 @@
 // Saves about 2% of program space on UNO (about 760bytes)
 // #define limited_key_types 1
 
-#define max_receive_buffer 30      // Define max length of recieve line
-#define max_key_definitions 20     // Define array size to hold key defs
+#define max_receive_buffer 100      // Define max length of recieve line
+#define max_key_definitions 30     // Define array size to hold key defs
 
 
 // Use defines rather than enum for types to save space
@@ -64,6 +64,7 @@ class Redis{
   public:
     char reply[max_receive_buffer];
 
+    char *pmax_reply = reply + max_receive_buffer -2;
     void redis_callback(char* reply);
     byte index = 0;
     byte var_follows = 255;
