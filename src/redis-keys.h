@@ -11,13 +11,14 @@
 /*****************************************/
 /** Options to reduce resources used *****/
 /*****************************************/
-// Comment out next line to only use byte, int and float types
+// Comment in next line to only use byte, int and float types
 // Saves about 2% of program space on UNO (about 760bytes)
 // #define limited_key_types 1
 
-#define max_receive_buffer 100      // Define max length of recieve line
+#define max_receive_buffer 40      // Define max length of recieve line
+#define max_send_buffer 70  // Define max length of send line includes key name and sting
 #define max_key_definitions 30     // Define array size to hold key defs
-
+#define max_var_size 30            // Define max length of a variable data as string
 
 // Use defines rather than enum for types to save space
 
@@ -49,32 +50,33 @@ class Redis{
  
     struct shared_data
       { 
-        String name;
+        const char* name;
         byte type;
         pval  pvar;
+        byte param;
       };
 
     shared_data data_defs[max_key_definitions];
-    String send;
-    String ret = String("\r\n");
+    char send[max_send_buffer];
+    char var[max_var_size];
+    byte var_len;
+    byte key_len;
 
     void convert(byte i, char* pReply);
     void to_string(byte i);
        
   public:
     char reply[max_receive_buffer];
-
     char *pmax_reply = reply + max_receive_buffer -2;
     void redis_callback(char* reply);
     byte index = 0;
     byte var_follows = 255;
-    typedef void func(String print);
+    typedef void func(const char* print);
     typedef void func1(char* reply);
     
     struct redis_callbacks
     { 
-      void (*print)(String print);
-      void (*println)(String println);
+      void (*print)(const char* print);
       bool enable; 
       void (*reply)(char* reply);
     };
@@ -87,16 +89,16 @@ class Redis{
     void set_callbacks(func print_func);
     void set_callbacks(func print_func,func1 call_func);
 
-    byte data_name(String name);
-    byte data(String name, float* var);
-    byte data(String name, byte* var);
-    byte data(String name, int* var);
+    byte data_name(const char* name);
+    byte data(const char* name, float* var, byte precision);
+    byte data(const char* name, byte* var);
+    byte data(const char* name, int* var);
 #ifndef limited_key_types
-    byte data(String name, unsigned int* var);
-    byte data(String name, long* var);
-    byte data(String name, unsigned long* var);
-    byte data(String name, double* var);
-    byte data(String name, char* var);
+    byte data(const char* name, unsigned int* var);
+    byte data(const char* name, long* var);
+    byte data(const char* name, unsigned long* var);
+    byte data(const char* name, double* var, byte precision);
+    byte data(const char* name, char* var, byte length);
 #endif
 
 
