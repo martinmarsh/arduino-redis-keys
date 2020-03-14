@@ -25,9 +25,10 @@ byte Redis::data_name(const char* name){
     return index++;
 }
 
-byte Redis::data(const char* name, float* var){
+byte Redis::data(const char* name, float* var, byte precision){
     data_defs[index].type = is_float;
     data_defs[index].pvar.pfloat = var;
+    data_defs[index].param = precision;
     return data_name(name); 
 }
 
@@ -66,16 +67,18 @@ byte Redis::data(const char* name, unsigned long* var){
     
 }
 
-byte Redis::data(const char* name, double* var){
+byte Redis::data(const char* name, double* var, byte precision){
     data_defs[index].type = is_double;
     data_defs[index].pvar.pdouble = var;
+    data_defs[index].param = precision;
     return data_name(name);
     
 }
 
-byte Redis::data(const char* name, char* var){
+byte Redis::data(const char* name, char* var, byte len){
     data_defs[index].type = is_char;
     data_defs[index].pvar.pchar = var;
+    data_defs[index].param = len;
     return data_name(name);
     
 }
@@ -107,7 +110,7 @@ void Redis::convert(byte i, char* pReply){
       *data_defs[i].pvar.pulong = atol(pReply);
       break;
     case is_char:
-       strncpy(data_defs[i].pvar.pchar, pReply, 10);
+       strncpy(data_defs[i].pvar.pchar, pReply,  data_defs[index].param);
 #endif
   };              
 }
@@ -115,30 +118,30 @@ void Redis::convert(byte i, char* pReply){
 void Redis::to_string(byte i){
   switch(data_defs[i].type){
     case is_byte:
-      snprintf(send, max_send_buffer, "%u", *data_defs[i].pvar.pbyte);
+      snprintf(var, max_send_buffer, "%u", *data_defs[i].pvar.pbyte);
       break;
     case is_int:
-      snprintf(send, max_send_buffer, "%i", *data_defs[i].pvar.pint);
+      snprintf(var, max_send_buffer, "%i", *data_defs[i].pvar.pint);
       break;
     case is_float:
-      dtostrf(*data_defs[i].pvar.pfloat, 16, 6, send);
+      dtostrf(*data_defs[i].pvar.pfloat, 12, data_defs[i].param, var);
       break;
 
 #ifndef limited_key_types
     case is_uint:
-      snprintf(send, max_send_buffer, "%u",*data_defs[i].pvar.puint);
+      snprintf(var, max_send_buffer, "%u",*data_defs[i].pvar.puint);
       break;
     case is_double:
-      dtostrf(*data_defs[i].pvar.pdouble, 22, 6, send);
+      dtostrf(*data_defs[i].pvar.pdouble, 17, data_defs[i].param, var);
       break;
     case is_long:
-      snprintf(send, max_send_buffer, "%li", *data_defs[i].pvar.plong);
+      snprintf(var, max_send_buffer, "%li", *data_defs[i].pvar.plong);
       break;
     case is_ulong:
-      snprintf(send, max_send_buffer, "%lu", *data_defs[i].pvar.pulong);
+      snprintf(var, max_send_buffer, "%lu", *data_defs[i].pvar.pulong);
       break;
     case is_char:
-      snprintf(send, max_send_buffer, "%s", data_defs[i].pvar.pchar);
+      snprintf(var, data_defs[i].param, "%s", data_defs[i].pvar.pchar);
       break;
 #endif      
   };              
@@ -176,23 +179,22 @@ void Redis::sync(char c){
 }
 
 
-void Redis::set(byte ref){       
-  call_back.print("set ");
-  call_back.print(data_defs[ref].name);
-  call_back.print(" ");
+void Redis::set(byte ref){  
+  key_len = strlen(data_defs[ref].name);
   to_string(ref);
+  var_len = strlen(var);
+  snprintf(send, max_send_buffer, "*3\r\n$3\r\nset\r\n$%u\r\n%s\r\n$%u\r\n%s\r\n", key_len, data_defs[ref].name, var_len, var); 
   call_back.print(send);
-  call_back.print(ret);
 }
 
 void Redis::get(byte ref){ 
-    call_back.print("Echo @@");
-    snprintf(send, max_send_buffer, "%u", ref);
-    call_back.print(send); 
-    call_back.print(ret);      
-    call_back.print("get ");
-    call_back.print(data_defs[ref].name);
-    call_back.print(ret);
+  int len = 3;
+  if (ref > 9){
+    len++;
+  }
+  key_len = strlen(data_defs[ref].name);
+  snprintf(send, max_send_buffer,  "*2\r\n$4\r\necho\r\n$%u\r\n@@%u\r\n*2\r\n$3\r\nget\r\n$%u\r\n%s\r\n", len, ref, key_len, data_defs[ref].name); 
+  call_back.print(send);
 }
 
 
